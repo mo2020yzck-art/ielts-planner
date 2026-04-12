@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IELTS 備考計畫</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#F0F2F5;color:#212121;min-height:100vh}
+.hdr{background:#263238;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300}
+.hdr-title{font-size:16px;font-weight:700}
+.hdr-right{text-align:right}
+#syncEl{font-size:11px}
+#totEl{font-size:10px;opacity:.6;margin-top:1px}
+.tabs{display:flex;gap:5px;padding:9px 12px;overflow-x:auto;background:#fff;border-bottom:1px solid #E0E0E0;position:sticky;top:46px;z-index:200}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:7px 13px;border-radius:18px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #DADADA;background:#fff;color:#78909C;position:relative;transition:all .15s}
+.tab.active{background:#263238;color:#fff;border-color:#263238}
+.tab.travel{border-color:#C2185B;color:#C2185B}
+.tab.travel.active{background:#C2185B;border-color:#C2185B;color:#fff}
+.tab .done-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:#43A047;border-radius:50%;font-size:9px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
+.banner{background:#ECEFF1;border-bottom:1px solid #CFD8DC;padding:10px 14px}
+.banner-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.banner-title{font-size:14px;font-weight:700;color:#37474F}
+.banner-sub{font-size:12px;color:#607D8B;margin-top:2px}
+.banner-right{text-align:right;flex-shrink:0}
+.travel-pill{display:inline-block;background:#FCE4EC;color:#C2185B;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:3px}
+.banner-pct{font-size:11px;color:#78909C}
+.pct-bar{margin-top:7px;height:5px;background:#CFD8DC;border-radius:3px;overflow:hidden}
+.pct-fill{height:100%;background:#00796B;border-radius:3px;transition:width .4s}
+.days{padding:8px 10px 72px;display:flex;flex-direction:column;gap:7px}
+.card{background:#fff;border-radius:12px;border:1px solid #E8EAED;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.card.blocked{background:#FFF3F3;border-color:#FFCDD2}
+.card.light{background:#FFF5FB;border-color:#F8BBD9}
+.card-hdr{padding:12px 13px;display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.card-hdr-info{flex:1;min-width:0}
+.card-day{font-size:14px;font-weight:700;color:#37474F}
+.card-meta{margin-top:3px;display:flex;gap:5px;align-items:center}
+.prog-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px}
+.light-tag{font-size:10px;color:#C2185B}
+.blk-btn{font-size:18px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:8px;opacity:.65;flex-shrink:0}
+.chevron{font-size:15px;color:#B0BEC5;transition:transform .2s;flex-shrink:0}
+.chevron.open{transform:rotate(180deg)}
+.blk-banner{background:#FCE4EC;color:#C62828;font-size:12px;padding:7px 13px;border-top:1px solid #FFCDD2}
+.task-list{border-top:1px solid #F0F0F0}
+.task{display:flex;align-items:flex-start;padding:10px 13px;gap:10px;border-bottom:1px solid #F7F7F7;cursor:pointer}
+.task.custom-task{background:#FFFDE7}
+.task:active{background:#F5F5F5}
+.cb{width:20px;height:20px;min-width:20px;margin-top:1px;border-radius:5px;border:2px solid #BDBDBD;background:transparent;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.cb.done{background:#263238;border-color:#263238}
+.cb.done-custom{background:#F57F17;border-color:#F57F17}
+.cb-check{color:#fff;font-size:11px;font-weight:900;line-height:1}
+.task-body{flex:1;min-width:0}
+.task-text{font-size:13px;line-height:1.5;color:#424242;word-break:break-word}
+.task-text.done{text-decoration:line-through;color:#BDBDBD}
+.task-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;align-items:center}
+.tag{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:700;white-space:nowrap}
+.res{font-size:10px;color:#90A4AE}
+.del-btn{font-size:11px;color:#EF5350;cursor:pointer;background:none;border:none;padding:0}
+.add-row{padding:9px 13px;display:flex;gap:7px;border-top:1px dashed #E8E8E8}
+.add-input{flex:1;border:1px solid #E0E0E0;border-radius:9px;padding:8px 11px;font-size:13px;outline:none;color:#424242;-webkit-appearance:none}
+.add-input:focus{border-color:#90A4AE}
+.add-btn{background:#263238;color:#fff;border:none;border-radius:9px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E0E0E0;padding:9px 14px 14px;z-index:300}
+.bottom-row{display:flex;justify-content:space-between;margin-bottom:5px}
+.bottom-label{font-size:12px;font-weight:700;color:#546E7A}
+.bottom-count{font-size:12px;color:#78909C}
+.bottom-bar{height:5px;background:#ECEFF1;border-radius:3px;overflow:hidden}
+.bottom-fill{height:100%;background:#00796B;border-radius:3px;transition:width .3s}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-title">📚 IELTS 備考計畫</div>
+  <div class="hdr-right">
+    <div id="syncEl" style="color:rgba(255,255,255,.7)">載入中...</div>
+    <div id="totEl"></div>
+  </div>
+</div>
+<div class="tabs" id="tabs"></div>
+<div class="banner" id="banner"></div>
+<div class="days" id="days"></div>
+<div class="bottom">
+  <div class="bottom-row"><span class="bottom-label" id="botLabel"></span><span class="bottom-count" id="botCount"></span></div>
+  <div class="bottom-bar"><div class="bottom-fill" id="botFill" style="width:0%"></div></div>
+</div>
+
+<script>
+const BIN_ID='69ce698436566621a871d87e';
+const MKEY='$2a$10$0kc89ruHkzAymyqeov0ZEOJkuc0/mWBVUPvAgxc5W90PQb7Txt0fi';
+const BURL=`https://api.jsonbin.io/v3/b/${BIN_ID}`;
+const MHDR={'Content-Type':'application/json','X-Master-Key':MKEY};
+
+const TL={vocab:'單字',read:'閱讀',listen:'聽力',speak:'口說',write:'寫作',exam:'真題',fixed:'固定'};
+const TC={vocab:{bg:'#E8F5E9',fg:'#1B5E20'},read:{bg:'#E3F2FD',fg:'#0D47A1'},listen:{bg:'#E0F7FA',fg:'#006064'},speak:{bg:'#FFFDE7',fg:'#F57F17'},write:{bg:'#FCE4EC',fg:'#880E4F'},exam:{bg:'#FFF3E0',fg:'#E65100'},fixed:{bg:'#EDE7F6',fg:'#4A148C'}};
+const tk=(type,text,res='')=>({type,text,res});
+const V='vocab',R='read',L='listen',S='speak',W='write',E='exam',F='fixed';
+
+const DATA=[
+{label:'W1',dates:'4/13–4/19',theme:'技巧入門 + 4/18診斷',travel:null,days:[
+{d:'4/13(一)',tasks:[tk(V,'課單字第1冊 p.1-2','課單字第1冊'),tk(R,'閱讀1正誤無關.pdf 看完一遍','產品4'),tk(W,'全題型寫作架構彙整.pdf Task2部分','產品1'),tk(S,'Funday x2堂','Funday'),tk(S,'如何準備口說.pdf + 四項評分標準.pdf','產品2')]},
+{d:'4/14(二)',tasks:[tk(V,'課單字第1冊 p.3-4','課單字第1冊'),tk(L,'聽力教學影片網址.docx → 影片搭配題本技巧','產品5'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'4/15(三)',tasks:[tk(V,'課單字第1冊 p.5-6','課單字第1冊'),tk(R,'閱讀5看不懂字怎麼猜.pdf','產品4'),tk(S,'實例0入門技巧.pdf + 實例1.pdf','產品2'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'4/16(四)',tasks:[tk(V,'課單字第1冊 p.7-8','課單字第1冊'),tk(L,'影片搭配題本.pdf 繼續聽力技巧','產品5'),tk(L,'選擇題解題技巧.pdf 看完','產品5'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'4/17(五)',tasks:[tk(V,'課單字第1冊 p.9-10','課單字第1冊'),tk(S,'實例1.pdf 複習 → Funday類似主題練','產品2'),tk(W,'8分句型.pdf + 句型結構補充包.pdf','產品1'),tk(S,'Funday x2堂','Funday')]},
+{d:'4/18(六)',tasks:[tk(E,'⭐⭐ Cambridge 15 Test2 聽+閱 計時 → 對答案記分數','Cambridge 15'),tk(W,'計時60min大作文 → 找人批改','產品1'),tk(S,'Funday x2堂','Funday'),tk(L,'地圖題技巧.pdf 看完','產品5')]},
+{d:'4/19(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'本週單字複習',''),tk(L,'影片搭配題本.pdf 繼續（明天出發仙台）','產品5')]},
+]},
+{label:'W2',dates:'4/20–4/26',theme:'仙台✈️ 4/19-4/23',travel:{name:'仙台',dates:'4/19–4/23'},days:[
+{d:'4/20(一)✈️',light:true,tasks:[tk(V,'課單字 1頁（旅遊減量）',''),tk(L,'地圖題技巧.pdf 飯店看','產品5'),tk(S,'Funday x1堂','Funday')]},
+{d:'4/21(二)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(S,'實例2.pdf 飯店看完','產品2')]},
+{d:'4/22(三)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(R,'閱讀7 HEADING.pdf 瀏覽','產品4'),tk(S,'Funday x1堂','Funday')]},
+{d:'4/23(四)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(S,'實例3.pdf 飯店看完','產品2')]},
+{d:'4/24(五)',tasks:[tk(V,'課單字第1冊 p.11-12','課單字第1冊'),tk(R,'閱讀6關鍵字空白題本.pdf 計時做','產品4'),tk(S,'實例3.pdf 複習 + Funday','產品2'),tk(S,'Funday x2堂','Funday')]},
+{d:'4/25(六)',tasks:[tk(R,'閱讀6關鍵字解答.pdf 對答案','產品4'),tk(R,'閱讀7 HEADING解析.pdf 看完','產品4'),tk(W,'8分句型.pdf + 句型結構補充包.pdf','產品1'),tk(E,'Cambridge 16 Test1 聽+閱 計時','Cambridge 16')]},
+{d:'4/26(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'課單字第1冊 p.13-14','課單字第1冊'),tk(S,'主題相關單字示範.pdf','產品2')]},
+]},
+{label:'W3',dates:'4/27–5/3',theme:'深入刷題 + 弱點對症',travel:null,days:[
+{d:'4/27(一)',tasks:[tk(V,'課單字第1冊 p.15-16','課單字第1冊'),tk(L,'長篇學術聽力填空音檔.mp3 → 暫停填空','產品5'),tk(R,'配對+填空.pdf 解題步驟','產品4'),tk(S,'Funday x2堂','Funday'),tk(S,'實例4.pdf','產品2')]},
+{d:'4/28(二)',tasks:[tk(V,'課單字第1冊 p.17-18','課單字第1冊'),tk(R,'選擇題+標題對應+正誤無關.pdf','產品4'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'4/29(三)',tasks:[tk(V,'課單字第1冊 p.19-20','課單字第1冊'),tk(L,'長篇聽力逐字稿.pdf → 對答案記句型','產品5'),tk(R,'簡答+填圖表.pdf','產品4'),tk(S,'Funday x2堂','Funday'),tk(S,'實例5.pdf','產品2')]},
+{d:'4/30(四)',tasks:[tk(V,'課單字第1冊 p.21-22','課單字第1冊'),tk(W,'柱狀圖練習.pdf 完成一篇','產品1'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/1(五)',tasks:[tk(V,'課單字第1冊 p.23-24','課單字第1冊'),tk(S,'衝高分論述架構.pdf + Funday','產品2'),tk(W,'大作文計時60min Problem&Solution → 找人批改','產品1'),tk(S,'Funday x2堂','Funday')]},
+{d:'5/2(六)',tasks:[tk(E,'Cambridge 16 Test2 閱讀（計時）→ 對答案','Cambridge 16'),tk(W,'找人批改本週作文','產品1'),tk(S,'Funday x2堂','Funday'),tk(L,'弱點聽力補強','產品5')]},
+{d:'5/3(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'本週單字複習',''),tk(R,'閱讀新題第1回 計時','產品4')]},
+]},
+{label:'W4',dates:'5/4–5/10',theme:'技巧收尾 → 峴港✈️5/7',travel:{name:'峴港',dates:'5/7–5/12'},days:[
+{d:'5/4(一)',tasks:[tk(V,'課單字第1冊 p.25-26','課單字第1冊'),tk(L,'聽力新題第一回音檔.mp3 + 逐字稿','產品5'),tk(R,'閱讀新題第1回 對答案+檢討','產品4'),tk(S,'Funday x2堂','Funday'),tk(S,'實例6.pdf','產品2')]},
+{d:'5/5(二)',tasks:[tk(V,'課單字第1冊 p.27-28','課單字第1冊'),tk(R,'弱點題型集中補強','產品4'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/6(三)',tasks:[tk(V,'課單字第1冊 p.29-30','課單字第1冊'),tk(L,'聽力新題第二回音檔.mp3','產品5'),tk(S,'實例7.pdf + Funday','產品2'),tk(W,'折線圖練習.pdf 一篇','產品1'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/7(四)✈️',light:true,tasks:[tk(V,'課單字 1頁（出發峴港）',''),tk(S,'Part1.pdf 題庫練20題（飯店）','產品2'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/8(五)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(S,'衝高分論述架構.pdf 飯店','產品2')]},
+{d:'5/9(六)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(S,'Funday x1堂','Funday')]},
+{d:'5/10(日)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(S,'Part1.pdf 繼續練','產品2')]},
+]},
+{label:'W5',dates:'5/11–5/17',theme:'峴港回台5/13 → 衝回正軌',travel:{name:'峴港',dates:'5/7–5/12'},days:[
+{d:'5/11(一)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(S,'Part1.pdf 繼續','產品2')]},
+{d:'5/12(二)✈️',light:true,tasks:[tk(V,'課單字 1頁（今天回台）',''),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/13(三)',tasks:[tk(V,'課單字第2冊 p.1-2','課單字第2冊'),tk(L,'聽力新題第二回逐字稿 對答案','產品5'),tk(R,'閱讀新題第2回 計時','產品4'),tk(S,'Funday x2堂','Funday'),tk(S,'實例8.pdf','產品2'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/14(四)',tasks:[tk(V,'課單字第2冊 p.3-4','課單字第2冊'),tk(W,'流程圖練習.pdf 一篇','產品1'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/15(五)',tasks:[tk(V,'課單字第2冊 p.5-6','課單字第2冊'),tk(R,'閱讀新題第2回 對答案+弱點整理','產品4'),tk(W,'大作文計時 Opinion型 → 找人批改','產品1'),tk(S,'Funday x2堂','Funday')]},
+{d:'5/16(六)',tasks:[tk(E,'Cambridge 16 Test3 聽+閱 計時','Cambridge 16'),tk(S,'Funday x2堂','Funday'),tk(W,'找人批改','產品1'),tk(L,'弱點補強','產品5')]},
+{d:'5/17(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'本週單字複習',''),tk(S,'實例9.pdf + 衝高分論述架構','產品2')]},
+]},
+{label:'W6',dates:'5/18–5/24',theme:'中段深化 — 大量刷題',travel:null,days:[
+{d:'5/18(一)',tasks:[tk(V,'課單字第2冊 p.7-8','課單字第2冊'),tk(L,'聽力新題第三回音檔.mp3 計時','產品5'),tk(R,'閱讀新題第3回 計時','產品4'),tk(S,'Funday x2堂','Funday'),tk(S,'實例10.pdf Part2','產品2')]},
+{d:'5/19(二)',tasks:[tk(V,'課單字第2冊 p.9-10','課單字第2冊'),tk(L,'聽力新題第三回逐字稿 對答案','產品5'),tk(W,'大作文 Advantage/Disadvantage 計時','產品1'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/20(三)',tasks:[tk(V,'課單字第2冊 p.11-12','課單字第2冊'),tk(R,'HEADING和TFNG弱點集中練','產品4'),tk(S,'實例11.pdf Part2','產品2'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/21(四)',tasks:[tk(V,'課單字第2冊 p.13-14','課單字第2冊'),tk(W,'大作文 Problem&Solution 計時','產品1'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/22(五)',tasks:[tk(V,'課單字第2冊 p.15-16','課單字第2冊'),tk(R,'閱讀新題第4回 計時','產品4'),tk(S,'Funday x2堂','Funday'),tk(W,'找人批改本週兩篇大作文','產品1')]},
+{d:'5/23(六)',tasks:[tk(E,'一整回題本聽力檔.mp3 完整模擬','產品5'),tk(R,'閱讀新題第4回 對答案','產品4'),tk(S,'Funday x2堂','Funday'),tk(V,'3300單字大全 閱讀考點詞 瀏覽','產品3')]},
+{d:'5/24(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'課單字第2冊複習',''),tk(S,'實例12.pdf + 連接詞及片語用法.pdf','產品2')]},
+]},
+{label:'W7',dates:'5/25–5/31',theme:'全科強化 — 模擬考節奏',travel:null,days:[
+{d:'5/25(一)',tasks:[tk(V,'課單字第2冊 p.17-18','課單字第2冊'),tk(L,'一整回題本音檔 1.25倍速試','產品5'),tk(R,'閱讀新題第5回 計時','產品4'),tk(S,'Funday x2堂','Funday')]},
+{d:'5/26(二)',tasks:[tk(V,'課單字第2冊 p.19-20','課單字第2冊'),tk(R,'HEADING or TFNG弱點再刷','產品4'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/27(三)',tasks:[tk(V,'課單字第2冊 p.21-22','課單字第2冊'),tk(L,'聽力弱點題型再刷','產品5'),tk(S,'Funday x2堂 Part1+2完整','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/28(四)',tasks:[tk(V,'課單字第2冊 p.23-24','課單字第2冊'),tk(W,'大作文 Discuss Both Views 計時','產品1'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'5/29(五)',tasks:[tk(V,'雅思代換詞.pdf 熟讀','產品3'),tk(W,'大作文 選擇一個觀點 計時','產品1'),tk(W,'小作文 流程圖or表格一篇','產品1'),tk(S,'Funday x2堂','Funday')]},
+{d:'5/30(六)',tasks:[tk(E,'⭐⭐ 第二次全模擬 Cambridge 17 Test1 聽+閱+寫','Cambridge 17'),tk(S,'Funday x2堂','Funday'),tk(W,'找人批改','產品1')]},
+{d:'5/31(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'代換詞複習','產品3'),tk(R,'閱讀新題第5回 對答案+分析','產品4')]},
+]},
+{label:'W8',dates:'6/1–6/7',theme:'弱點攻擊 — 考前第4週',travel:null,days:[
+{d:'6/1(一)',tasks:[tk(V,'課單字第2冊 p.25-26','課單字第2冊'),tk(L,'弱點聽力題型 x2回集中練','產品5'),tk(S,'Funday x2堂','Funday')]},
+{d:'6/2(二)',tasks:[tk(V,'課單字第2冊 p.27-28','課單字第2冊'),tk(R,'弱點閱讀題型 x2回集中練','產品4'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/3(三)',tasks:[tk(V,'課單字第2冊 p.29-30','課單字第2冊'),tk(L,'弱點聽力 x2回','產品5'),tk(W,'看所有批改回饋 整理常犯3個錯誤','產品1'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/4(四)',tasks:[tk(V,'課單字第2冊 p.31-32','課單字第2冊'),tk(R,'弱點閱讀題型','產品4'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/5(五)',tasks:[tk(V,'課單字第3冊 p.1-2','課單字第3冊'),tk(W,'大作文計時（針對常犯錯）→ 找人批改','產品1'),tk(S,'外師練習 Part1+2+3 本週開始！','外師'),tk(S,'Funday x2堂','Funday')]},
+{d:'6/6(六)',tasks:[tk(E,'Cambridge 17 Test2 聽+閱 計時','Cambridge 17'),tk(S,'Funday x2堂','Funday'),tk(S,'整理所有Part2 Cue Card清單','產品2')]},
+{d:'6/7(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'十天突破6-9分範文.pdf 讀論點','產品3'),tk(S,'自己錄音 Part1+2+3 找問題','外師')]},
+]},
+{label:'W9',dates:'6/8–6/14',theme:'考前衝刺 — 擬真模式',travel:null,days:[
+{d:'6/8(一)',tasks:[tk(V,'課單字第3冊 p.3-4','課單字第3冊'),tk(L,'擬真聽力 計時不重播','產品5'),tk(R,'擬真閱讀 60min計時','產品4'),tk(S,'Funday x2堂','Funday')]},
+{d:'6/9(二)',tasks:[tk(V,'課單字第3冊 p.5-6','課單字第3冊'),tk(L,'擬真聽力 1.25倍速','產品5'),tk(S,'外師練習','外師'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/10(三)',tasks:[tk(V,'課單字第3冊 p.7-8','課單字第3冊'),tk(R,'擬真閱讀 計時+記Band分數','產品4'),tk(W,'大作文計時 → 自評分數','產品1'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/11(四)',tasks:[tk(V,'課單字第3冊 p.9-10','課單字第3冊'),tk(L,'擬真聽力','產品5'),tk(S,'外師練習','外師'),tk(S,'Funday x2堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/12(五)',tasks:[tk(V,'代換詞滾動複習','產品3'),tk(W,'小作文+大作文計時一組','產品1'),tk(S,'Funday x2堂','Funday'),tk(S,'自己錄音 全套Part1-3','外師')]},
+{d:'6/13(六)',tasks:[tk(E,'⭐⭐ 第三次全模擬 Cambridge 15 Test3 含口說','Cambridge 15'),tk(S,'Funday x2堂','Funday')]},
+{d:'6/14(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'課單字第3冊 p.11-12','課單字第3冊'),tk(R,'擬真閱讀一回','產品4')]},
+]},
+{label:'W10',dates:'6/15–6/30',theme:'⚠️ 河內✈️6/15-6/19 → 6/30考試！',travel:{name:'河內',dates:'6/15–6/19'},days:[
+{d:'6/15(一)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(L,'舊聽力筆記複習（不做新題）',''),tk(S,'Part2 Cue Card 練3題','產品2')]},
+{d:'6/16(二)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(R,'HEADING解題步驟複習','產品4'),tk(S,'Part2 Cue Card 練3題','產品2')]},
+{d:'6/17(三)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(S,'Part2 Cue Card 練3題（邊走邊想）','產品2'),tk(L,'0題數分數對照 再看一次','產品5')]},
+{d:'6/18(四)✈️',light:true,tasks:[tk(V,'課單字 1頁',''),tk(S,'Funday x1堂','Funday')]},
+{d:'6/19(五)✈️',light:true,tasks:[tk(V,'課單字 1頁（今天回台）',''),tk(S,'Part2 Cue Card 總複習','產品2')]},
+{d:'6/20(六)',tasks:[tk(L,'擬真聽力一回 找回手感','產品5'),tk(R,'擬真閱讀一回 找回手感','產品4'),tk(E,'Cambridge 15 Test4 壓軸模擬','Cambridge 15'),tk(S,'Funday x2堂','Funday')]},
+{d:'6/21(日)',tasks:[tk(S,'Funday x2堂','Funday'),tk(V,'代換詞+考點詞最終複習','產品3'),tk(S,'自己錄音 確認口說狀態','外師')]},
+{d:'6/22(一)',tasks:[tk(V,'輕量複習',''),tk(S,'Funday x1堂','Funday'),tk(L,'聽力弱點快速回顧','產品5')]},
+{d:'6/23(二)',tasks:[tk(R,'閱讀弱點快速回顧','產品4'),tk(S,'Funday x1堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/24(三)',tasks:[tk(V,'代換詞最後複習','產品3'),tk(S,'外師練習 最後一次','外師'),tk(S,'Funday x1堂','Funday'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/25(四)',tasks:[tk(S,'Funday x1堂','Funday'),tk(W,'看批改回饋筆記','產品1'),tk(F,'⭐ 亞斯聽力課 7-10pm','亞斯')]},
+{d:'6/26(五)',tasks:[tk(V,'輕量複習即可',''),tk(S,'Funday x1堂','Funday')]},
+{d:'6/27(六)',tasks:[tk(E,'⚠️ 考前一天 — 早點睡，不做新題',''),tk(V,'睡前輕翻代換詞','產品3')]},
+{d:'6/28(日)',tasks:[tk(E,'⭐⭐⭐ 考試！Good Luck! 6/30','')]},
+]},
+];
+
+// STATE
+let curW=0, done={}, blocked={}, custom={}, expanded={}, inputs={};
+let syncTimer=null;
+
+function setSS(s,clr){
+  const el=document.getElementById('syncEl');
+  el.textContent=s;
+  el.style.color=clr||'rgba(255,255,255,.7)';
+}
+
+async function load(){
+  setSS('載入中...','rgba(255,255,255,.7)');
+  try{
+    const r=await fetch(BURL+'/latest',{headers:{'X-Master-Key':MKEY}});
+    if(r.ok){const j=await r.json();const d=j.record||{};done=d.done||{};blocked=d.blocked||{};custom=d.custom||{};setSS('✓ 已同步','#69F0AE');}
+    else setSS('⚠️ 載入失敗','#FF5252');
+  }catch(e){setSS('⚠️ 載入失敗','#FF5252');}
+}
+
+function schedSync(){
+  clearTimeout(syncTimer);
+  setSS('⟳ 同步中...','rgba(255,255,255,.7)');
+  syncTimer=setTimeout(async()=>{
+    try{
+      const r=await fetch(BURL,{method:'PUT',headers:MHDR,body:JSON.stringify({done,blocked,custom})});
+      setSS(r.ok?'✓ 已同步':'⚠️ 失敗',r.ok?'#69F0AE':'#FF5252');
+    }catch(e){setSS('⚠️ 失敗','#FF5252');}
+  },900);
+}
+
+// KEYS
+const tid=(w,d,i)=>`w${w}d${d}t${i}`;
+const did=(w,d)=>`w${w}d${d}`;
+const cid=(w,d,i)=>`w${w}d${d}c${i}`;
+
+function wStats(wi){
+  let tot=0,dn=0;
+  DATA[wi].days.forEach((day,di)=>{
+    day.tasks.forEach((_,ti)=>{tot++;if(done[tid(wi,di,ti)])dn++;});
+    (custom[did(wi,di)]||[]).forEach((_,ci)=>{tot++;if(done[cid(wi,di,ci)])dn++;});
+  });
+  return{tot,dn,pct:tot?Math.round(dn/tot*100):0};
+}
+
+function render(){renderTabs();renderBanner();renderDays();renderBottom();}
+
+function renderTabs(){
+  const el=document.getElementById('tabs');
+  el.innerHTML=DATA.map((wk,i)=>{
+    const s=wStats(i);
+    const cls=['tab'];
+    if(i===curW)cls.push('active');
+    if(wk.travel)cls.push('travel');
+    const dot=s.pct===100?'<span class="done-dot">✓</span>':'';
+    return`<button class="${cls.join(' ')}" onclick="sw(${i})">${wk.label}${dot}</button>`;
+  }).join('');
+  setTimeout(()=>{const a=document.querySelector('.tab.active');if(a)a.scrollIntoView({block:'nearest',inline:'center'});},50);
+}
+
+function renderBanner(){
+  const wk=DATA[curW];const s=wStats(curW);
+  const tp=wk.travel?`<div class="travel-pill">✈️ ${wk.travel.name} ${wk.travel.dates}</div>`:'';
+  document.getElementById('banner').innerHTML=`
+    <div class="banner-top">
+      <div><div class="banner-title">${wk.label} · ${wk.dates}</div><div class="banner-sub">${wk.theme}</div></div>
+      <div class="banner-right">${tp}<div class="banner-pct">${s.dn}/${s.tot} (${s.pct}%)</div></div>
+    </div>
+    <div class="pct-bar"><div class="pct-fill" style="width:${s.pct}%"></div></div>`;
+  const all=DATA.reduce((a,_,wi)=>{const s=wStats(wi);return{tot:a.tot+s.tot,dn:a.dn+s.dn}},{tot:0,dn:0});
+  const ap=all.tot?Math.round(all.dn/all.tot*100):0;
+  document.getElementById('totEl').textContent=`總進度 ${all.dn}/${all.tot} (${ap}%)`;
+}
+
+function renderDays(){
+  const el=document.getElementById('days');
+  el.innerHTML=DATA[curW].days.map((day,di)=>{
+    const DID=did(curW,di);
+    const isBlk=!!blocked[DID];const isLt=!!day.light;
+    const isOpen=expanded[DID]!==false;
+    const cus=custom[DID]||[];
+    const tot=day.tasks.length+cus.length;
+    const dn=day.tasks.filter((_,ti)=>done[tid(curW,di,ti)]).length+cus.filter((_,ci)=>done[cid(curW,di,ci)]).length;
+    const pct=tot?Math.round(dn/tot*100):0;
+    const pb=pct===100?'#E8F5E9':pct>0?'#FFF9C4':'#F5F5F5';
+    const pf=pct===100?'#2E7D32':pct>0?'#E65100':'#9E9E9E';
+    const ltTag=isLt?'<span class="light-tag">✈️ 輕量</span>':'';
+
+    let taskHTML='';
+    if(isOpen){
+      taskHTML='<div class="task-list">';
+      day.tasks.forEach((task,ti)=>{
+        const TID=tid(curW,di,ti);const isDn=!!done[TID];
+        const tc=TC[task.type]||{bg:'#F5F5F5',fg:'#757575'};
+        const resTag=task.res?`<span class="res">📂 ${task.res}</span>`:'';
+        taskHTML+=`<div class="task" onclick="toggleT('${TID}','${DID}')">
+          <div class="cb${isDn?' done':''}">${isDn?'<span class="cb-check">✓</span>':''}</div>
+          <div class="task-body">
+            <div class="task-text${isDn?' done':''}">${task.text}</div>
+            <div class="task-tags"><span class="tag" style="background:${tc.bg};color:${tc.fg}">${TL[task.type]||''}</span>${resTag}</div>
+          </div>
+        </div>`;
+      });
+      cus.forEach((txt,ci)=>{
+        const CID=cid(curW,di,ci);const isDn=!!done[CID];
+        taskHTML+=`<div class="task custom-task" onclick="toggleC('${CID}','${DID}')">
+          <div class="cb${isDn?' done-custom':''}">${isDn?'<span class="cb-check">✓</span>':''}</div>
+          <div class="task-body">
+            <div class="task-text${isDn?' done':''}">${txt}</div>
+            <div class="task-tags"><span class="tag" style="background:#FFF9C4;color:#F9A825">自訂</span><button class="del-btn" onclick="event.stopPropagation();delC('${DID}',${ci})">✕ 刪除</button></div>
+          </div>
+        </div>`;
+      });
+      const inp=inputs[DID]||'';
+      taskHTML+=`<div class="add-row">
+        <input class="add-input" id="ai_${DID}" value="${inp}" placeholder="新增任務或補課..." oninput="inputs['${DID}']=this.value" onkeydown="if(event.key==='Enter')addC('${DID}')">
+        <button class="add-btn" onclick="addC('${DID}')">+</button>
+      </div></div>`;
+    }
+
+    const blkBanner=isBlk?'<div class="blk-banner">⚠️ 臨時任務日 — 記得補課</div>':'';
+    return`<div class="card${isBlk?' blocked':''}${isLt?' light':''}">
+      <div class="card-hdr" onclick="togExp('${DID}')">
+        <div class="card-hdr-info">
+          <div class="card-day">${day.d}</div>
+          <div class="card-meta"><span class="prog-pill" style="background:${pb};color:${pf}">${dn}/${tot} · ${pct}%</span>${ltTag}</div>
+        </div>
+        <button class="blk-btn" onclick="event.stopPropagation();togBlk('${DID}')">${isBlk?'🔓':'🚫'}</button>
+        <span class="chevron${isOpen?' open':''}">▼</span>
+      </div>
+      ${blkBanner}${taskHTML}
+    </div>`;
+  }).join('');
+}
+
+function renderBottom(){
+  const s=wStats(curW);
+  document.getElementById('botLabel').textContent=`${DATA[curW].label} 進度`;
+  document.getElementById('botCount').textContent=`${s.dn}/${s.tot} · ${s.pct}%`;
+  document.getElementById('botFill').style.width=s.pct+'%';
+}
+
+// ACTIONS
+function sw(i){curW=i;render();window.scrollTo(0,0);}
+function togExp(DID){expanded[DID]=expanded[DID]===false?true:false;renderDays();}
+function togBlk(DID){blocked[DID]=!blocked[DID];schedSync();render();}
+function toggleT(TID,DID){done[TID]=!done[TID];schedSync();renderDays();renderBanner();renderBottom();}
+function toggleC(CID,DID){done[CID]=!done[CID];schedSync();renderDays();renderBanner();renderBottom();}
+function addC(DID){
+  const v=(inputs[DID]||'').trim();if(!v)return;
+  if(!custom[DID])custom[DID]=[];
+  custom[DID].push(v);inputs[DID]='';
+  schedSync();renderDays();renderBanner();renderBottom();
+}
+function delC(DID,ci){
+  if(!custom[DID])return;
+  custom[DID].splice(ci,1);
+  schedSync();renderDays();renderBanner();renderBottom();
+}
+
+(async()=>{await load();render();})();
+</script>
+</body>
+</html>
