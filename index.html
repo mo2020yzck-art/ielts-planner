@@ -310,14 +310,21 @@ function renderDays(){
     if(isOpen){
       taskHTML='<div class="task-list">';
       day.tasks.forEach((task,ti)=>{
-        const TID=tid(curW,di,ti);const isDn=!!done[TID];
+        const TID=tid(curW,di,ti);const sv=done[TID]||0;
         const tc=TC[task.type]||{bg:'#F5F5F5',fg:'#757575'};
         const resTag=task.res?`<span class="res">📂 ${task.res}</span>`:'';
-        taskHTML+=`<div class="task" onclick="toggleT('${TID}','${DID}')">
-          <div class="cb${isDn?' done':''}">${isDn?'<span class="cb-check">✓</span>':''}</div>
+        const textCls=sv===2?' done':sv===1?' half':'';
+        const noteVal=(notes[TID]||'').replace(/"/g,'&quot;');
+        taskHTML+=`<div class="task" style="cursor:default">
           <div class="task-body">
-            <div class="task-text${isDn?' done':''}">${task.text}</div>
+            <div class="state-btns">
+              <div class="sb${sv===0?' s-none':''}" onclick="setTaskState('${TID}',0,'${DID}')" title="未完成"></div>
+              <div class="sb${sv===1?' s-half':''}" onclick="setTaskState('${TID}',1,'${DID}')" title="部分完成">◑</div>
+              <div class="sb${sv===2?' s-full':''}" onclick="setTaskState('${TID}',2,'${DID}')" title="完成">✓</div>
+            </div>
+            <div class="task-text${textCls}">${task.text}</div>
             <div class="task-tags"><span class="tag" style="background:${tc.bg};color:${tc.fg}">${TL[task.type]||''}</span>${resTag}</div>
+            <input class="note-input" placeholder="備註（例：背了1頁、只上1堂）" value="${noteVal}" onclick="event.stopPropagation()" oninput="notes['${TID}']=this.value;schedSync()">
           </div>
         </div>`;
       });
