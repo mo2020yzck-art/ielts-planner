@@ -67,6 +67,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#F
 .bottom-count{font-size:12px;color:#78909C}
 .bottom-bar{height:5px;background:#ECEFF1;border-radius:3px;overflow:hidden}
 .bottom-fill{height:100%;background:#00796B;border-radius:3px;transition:width .3s}
+.cb.half{border-color:#F57F17;background:transparent}
+.task-text.half{color:#888}
+.note-input{display:block;width:100%;margin-top:5px;border:none;border-bottom:1px dashed #E0E0E0;padding:3px 0;font-size:11px;color:#78909C;background:transparent;outline:none}
+.note-input:focus{border-bottom-color:#90A4AE}
+.note-input::placeholder{color:#BDBDBD}
+.report-btn{background:#00796B;color:#fff;border:none;border-radius:9px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;width:100%}
 </style>
 </head>
 <body>
@@ -84,6 +90,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#F
 <div class="bottom">
   <div class="bottom-row"><span class="bottom-label" id="botLabel"></span><span class="bottom-count" id="botCount"></span></div>
   <div class="bottom-bar"><div class="bottom-fill" id="botFill" style="width:0%"></div></div>
+  <button class="report-btn" onclick="showReport()">📊 產生本週報表</button>
+</div>
+<div id="reportModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;overflow-y:auto;padding:16px">
+  <div style="background:#fff;border-radius:14px;padding:16px;max-width:600px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:15px;font-weight:700">📊 本週報表 — <span id="rptTitle"></span></span>
+      <button onclick="document.getElementById('reportModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#78909C">✕</button>
+    </div>
+    <div id="rptBody"></div>
+  </div>
 </div>
 
 <script>
@@ -198,7 +214,7 @@ const DATA=[
 ];
 
 // STATE
-let curW=0, done={}, blocked={}, custom={}, expanded={}, inputs={};
+let curW=0, done={}, blocked={}, custom={}, expanded={}, inputs={}, notes={}, noteInputs={};
 let syncTimer=null;
 
 function setSS(s,clr){
@@ -211,7 +227,7 @@ async function load(){
   setSS('載入中...','rgba(255,255,255,.7)');
   try{
     const r=await fetch(BURL+'/latest',{headers:{'X-Master-Key':MKEY}});
-    if(r.ok){const j=await r.json();const d=j.record||{};done=d.done||{};blocked=d.blocked||{};custom=d.custom||{};setSS('✓ 已同步','#69F0AE');}
+    if(r.ok){const j=await r.json();const d=j.record||{};done=d.done||{};blocked=d.blocked||{};custom=d.custom||{};notes=d.notes||{};setSS('✓ 已同步','#69F0AE');}
     else setSS('⚠️ 載入失敗','#FF5252');
   }catch(e){setSS('⚠️ 載入失敗','#FF5252');}
 }
@@ -221,7 +237,7 @@ function schedSync(){
   setSS('⟳ 同步中...','rgba(255,255,255,.7)');
   syncTimer=setTimeout(async()=>{
     try{
-      const r=await fetch(BURL,{method:'PUT',headers:MHDR,body:JSON.stringify({done,blocked,custom})});
+      const r=await fetch(BURL,{method:'PUT',headers:MHDR,body:JSON.stringify({done,blocked,custom,notes})});
       setSS(r.ok?'✓ 已同步':'⚠️ 失敗',r.ok?'#69F0AE':'#FF5252');
     }catch(e){setSS('⚠️ 失敗','#FF5252');}
   },900);
@@ -232,11 +248,12 @@ const tid=(w,d,i)=>`w${w}d${d}t${i}`;
 const did=(w,d)=>`w${w}d${d}`;
 const cid=(w,d,i)=>`w${w}d${d}c${i}`;
 
+function taskScore(v){return v===2?1:v===1?0.5:0;}
 function wStats(wi){
   let tot=0,dn=0;
   DATA[wi].days.forEach((day,di)=>{
-    day.tasks.forEach((_,ti)=>{tot++;if(done[tid(wi,di,ti)])dn++;});
-    (custom[did(wi,di)]||[]).forEach((_,ci)=>{tot++;if(done[cid(wi,di,ci)])dn++;});
+    day.tasks.forEach((_,ti)=>{tot++;dn+=taskScore(done[tid(wi,di,ti)]||0);});
+    (custom[did(wi,di)]||[]).forEach((_,ci)=>{tot++;dn+=taskScore(done[cid(wi,di,ci)]||0);});
   });
   return{tot,dn,pct:tot?Math.round(dn/tot*100):0};
 }
@@ -300,12 +317,16 @@ function renderDays(){
         </div>`;
       });
       cus.forEach((txt,ci)=>{
-        const CID=cid(curW,di,ci);const isDn=!!done[CID];
+        const CID=cid(curW,di,ci);const csv=done[CID]||0;
+        const ccbCls=csv===2?'cb done':csv===1?'cb half':'cb';
+        const ccbInner=csv===2?'<span class="cb-check">✓</span>':csv===1?'<span class="cb-check" style="color:#F57F17;font-size:14px">◑</span>':'';
+        const cnoteKey=CID; const cnoteVal=notes[cnoteKey]||'';
         taskHTML+=`<div class="task custom-task" onclick="toggleC('${CID}','${DID}')">
-          <div class="cb${isDn?' done-custom':''}">${isDn?'<span class="cb-check">✓</span>':''}</div>
+          <div class="${ccbCls}">${ccbInner}</div>
           <div class="task-body">
-            <div class="task-text${isDn?' done':''}">${txt}</div>
+            <div class="task-text${csv===2?' done':csv===1?' half':''}">${txt}</div>
             <div class="task-tags"><span class="tag" style="background:#FFF9C4;color:#F9A825">自訂</span><button class="del-btn" onclick="event.stopPropagation();delC('${DID}',${ci})">✕ 刪除</button></div>
+            <input class="note-input" placeholder="備註..." value="${cnoteVal.replace(/"/g,'&quot;')}" onclick="event.stopPropagation()" oninput="notes['${cnoteKey}']=this.value;schedSync()">
           </div>
         </div>`;
       });
@@ -342,8 +363,21 @@ function renderBottom(){
 function sw(i){curW=i;render();window.scrollTo(0,0);}
 function togExp(DID){expanded[DID]=expanded[DID]===false?true:false;renderDays();}
 function togBlk(DID){blocked[DID]=!blocked[DID];schedSync();render();}
-function toggleT(TID,DID){done[TID]=!done[TID];schedSync();renderDays();renderBanner();renderBottom();}
-function toggleC(CID,DID){done[CID]=!done[CID];schedSync();renderDays();renderBanner();renderBottom();}
+function toggleT(TID,DID){
+  const cur=done[TID]||0;
+  done[TID]=(cur+1)%3;
+  schedSync();renderDays();renderBanner();renderBottom();
+}
+function toggleC(CID,DID){
+  const cur=done[CID]||0;
+  done[CID]=(cur+1)%3;
+  schedSync();renderDays();renderBanner();renderBottom();
+}
+function setNote(key,val){
+  if(!notes)notes={};
+  notes[key]=val;
+  schedSync();
+}
 function addC(DID){
   const v=(inputs[DID]||'').trim();if(!v)return;
   if(!custom[DID])custom[DID]=[];
@@ -354,6 +388,61 @@ function delC(DID,ci){
   if(!custom[DID])return;
   custom[DID].splice(ci,1);
   schedSync();renderDays();renderBanner();renderBottom();
+}
+
+function showReport(){
+  const wk=DATA[curW];
+  document.getElementById('rptTitle').textContent=wk.label+' '+wk.dates;
+  const s=wStats(curW);
+  let full=0,half=0,none=0,blocked_days=0;
+  let notesList=[];
+  let incomp=[];
+  wk.days.forEach((day,di)=>{
+    const DID=did(curW,di);
+    if(blocked[DID])blocked_days++;
+    day.tasks.forEach((task,ti)=>{
+      const TID=tid(curW,di,ti);
+      const v=done[TID]||0;
+      if(v===2)full++;
+      else if(v===1){half++;incomp.push({d:day.d,text:task.text,v:'◑'});}
+      else{none++;incomp.push({d:day.d,text:task.text,v:'○'});}
+      const n=notes[TID];
+      if(n)notesList.push({d:day.d,text:task.text,note:n});
+    });
+    (custom[DID]||[]).forEach((txt,ci)=>{
+      const CID=cid(curW,di,ci);
+      const v=done[CID]||0;
+      if(v===2)full++;else if(v===1)half++;else none++;
+    });
+  });
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+    <div style="background:#E8F5E9;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#2E7D32">${full}</div><div style="font-size:11px;color:#388E3C">✓ 完成</div></div>
+    <div style="background:#FFF9C4;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#F57F17">${half}</div><div style="font-size:11px;color:#F57F17">◑ 部分完成</div></div>
+    <div style="background:#F5F5F5;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#9E9E9E">${none}</div><div style="font-size:11px;color:#9E9E9E">○ 未完成</div></div>
+  </div>
+  <div style="background:#E3F2FD;border-radius:10px;padding:10px;margin-bottom:14px;text-align:center">
+    <div style="font-size:28px;font-weight:700;color:#0D47A1">${s.pct}%</div>
+    <div style="font-size:12px;color:#1565C0">本週整體完成率</div>
+    ${blocked_days>0?`<div style="font-size:11px;color:#C62828;margin-top:4px">⚠️ ${blocked_days}天有臨時任務</div>`:''}
+  </div>`;
+
+  if(incomp.length>0){
+    html+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px;color:#37474F">⚠️ 未完成 / 部分完成（需補課）</div>`;
+    incomp.slice(0,10).forEach(i=>{
+      html+=`<div style="font-size:12px;padding:5px 8px;border-left:3px solid ${i.v==='◑'?'#F57F17':'#EF5350'};margin-bottom:4px;color:#424242">${i.v} <b>${i.d}</b> — ${i.text}</div>`;
+    });
+    if(incomp.length>10)html+=`<div style="font-size:11px;color:#78909C">...還有${incomp.length-10}項</div>`;
+    html+='<div style="height:12px"></div>';
+  }
+
+  if(notesList.length>0){
+    html+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px;color:#37474F">📝 本週備註記錄</div>`;
+    notesList.forEach(n=>{
+      html+=`<div style="font-size:12px;padding:5px 8px;background:#F5F5F5;border-radius:6px;margin-bottom:4px"><b>${n.d}</b> — ${n.text}<br><span style="color:#78909C">${n.note}</span></div>`;
+    });
+  }
+  document.getElementById('rptBody').innerHTML=html;
+  document.getElementById('reportModal').style.display='block';
 }
 
 (async()=>{await load();render();})();
